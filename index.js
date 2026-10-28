@@ -11,15 +11,19 @@ app.post('/api/generate-story', async (req, res) => {
     const { topic } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    try {
+        try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, // यहाँ मॉडल बदला है
             {
                 contents: [{ parts: [{ text: `Write a short engaging video script about: ${topic}` }] }]
             }
         );
         const storyText = response.data.candidates[0].content.parts[0].text;
         res.json({ success: true, result: storyText });
+    } catch (error) {
+        console.error("GEMINI ERROR:", error.response ? error.response.data : error.message); // ये रेंडर लॉग्स में असली एरर दिखाएगा
+        res.status(500).json({ success: false, error: error.response ? error.response.data.error.message : "API Call Failed" });
+        }
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ success: false, error: "Story generate nahi ho payi." });
