@@ -12,9 +12,9 @@ app.post('/api/generate-story', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
 
     try {
-        // यहाँ हमने सही मॉडल (gemini-1.5-flash) और सही URL इस्तेमाल किया है
+        // ध्यान दें: यहाँ मॉडल 'gemini-2.5-flash' कर दिया गया है
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 contents: [{ parts: [{ text: `Write a short engaging video script about: ${topic}` }] }]
             }
@@ -23,7 +23,7 @@ app.post('/api/generate-story', async (req, res) => {
         res.json({ success: true, result: storyText });
     } catch (error) {
         console.error("GEMINI ERROR:", error.response ? error.response.data : error.message);
-        res.status(500).json({ success: false, error: "Gemini API me error aya hai." });
+        res.status(500).json({ success: false, error: "Gemini API call failed. Check logs." });
     }
 });
 
@@ -51,7 +51,7 @@ app.post('/api/generate-voice', async (req, res) => {
         res.json({ success: true, audioBase64: response.data.audios[0] });
     } catch (error) {
         console.error("SARVAM ERROR:", error.response ? error.response.data : error.message);
-        res.status(500).json({ success: false, error: "Sarvam AI me error aya hai." });
+        res.status(500).json({ success: false, error: "Sarvam AI call failed." });
     }
 });
 
