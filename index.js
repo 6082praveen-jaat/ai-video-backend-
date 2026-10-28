@@ -11,9 +11,10 @@ app.post('/api/generate-story', async (req, res) => {
     const { topic } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-        try {
+    try {
+        // यहाँ हमने सही मॉडल (gemini-1.5-flash) और सही URL इस्तेमाल किया है
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, // यहाँ मॉडल बदला है
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
             {
                 contents: [{ parts: [{ text: `Write a short engaging video script about: ${topic}` }] }]
             }
@@ -21,12 +22,8 @@ app.post('/api/generate-story', async (req, res) => {
         const storyText = response.data.candidates[0].content.parts[0].text;
         res.json({ success: true, result: storyText });
     } catch (error) {
-        console.error("GEMINI ERROR:", error.response ? error.response.data : error.message); // ये रेंडर लॉग्स में असली एरर दिखाएगा
-        res.status(500).json({ success: false, error: error.response ? error.response.data.error.message : "API Call Failed" });
-        }
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ success: false, error: "Story generate nahi ho payi." });
+        console.error("GEMINI ERROR:", error.response ? error.response.data : error.message);
+        res.status(500).json({ success: false, error: "Gemini API me error aya hai." });
     }
 });
 
@@ -40,8 +37,8 @@ app.post('/api/generate-voice', async (req, res) => {
             'https://api.sarvam.ai/text-to-speech',
             {
                 inputs: [text],
-                target_language_code: language, 
-                speaker: "meera", 
+                target_language_code: language,
+                speaker: "meera",
                 pitch: 0,
                 pace: 1.0,
                 loudness: 1.5,
@@ -53,8 +50,8 @@ app.post('/api/generate-voice', async (req, res) => {
         );
         res.json({ success: true, audioBase64: response.data.audios[0] });
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ success: false, error: "Voice generate nahi ho payi." });
+        console.error("SARVAM ERROR:", error.response ? error.response.data : error.message);
+        res.status(500).json({ success: false, error: "Sarvam AI me error aya hai." });
     }
 });
 
