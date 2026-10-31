@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const AGNES_API_KEY = process.env.AGNES_API_KEY;
+const MAGIC_HOUR_API_KEY = process.env.MAGIC_HOUR_API_KEY;
 
 // 1. AI Story (Gemini)
 app.post('/api/generate-story', async (req, res) => {
@@ -24,43 +24,50 @@ app.post('/api/generate-story', async (req, res) => {
     }
 });
 
-// 2. Video Generate (Agnes AI)
+// 2. Video Generate (Magic Hour - wan-2.2 model)
 app.post('/api/generate-video', async (req, res) => {
     const { prompt } = req.body;
 
     try {
-        const response = await axios.post('https://apihub.agnes-ai.com/v1/videos', {
-            model: "agnes-video-2.5-flash",
+        const response = await axios.post('https://api.magichour.ai/v1/text-to-video', {
+            model: "wan-2.2",
             prompt: prompt,
-            seconds: "5",
-            mode: "text",
-            size: "720P",
+            duration_seconds: 5,
+            resolution: "480p",
             aspect_ratio: "16:9"
         }, {
             headers: {
-                'Authorization': `Bearer ${AGNES_API_KEY}`,
+                'Authorization': `Bearer ${MAGIC_HOUR_API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
-        res.json({ success: true, taskId: response.data.video_id });
+
+        // Magic Hour एक project_id देता है
+        res.json({ success: true, taskId: response.data.id });
+
     } catch (error) {
-        console.error("Agnes Error:", error.message);
+        console.error("Magic Hour Error:", error.response ? error.response.data : error.message);
         res.status(500).json({ success: false, error: "Video task fail." });
     }
 });
 
-// 3. Video Status Check (Agnes AI)
+// 3. Video Status Check (Magic Hour)
 app.get('/api/video-status/:taskId', async (req, res) => {
     const { taskId } = req.params;
 
     try {
-        const response = await axios.get(`https://apihub.agnes-ai.com/agnesapi?video_id=${taskId}&model_name=agnes-video-2.5-flash`, {
-            headers: { 'Authorization': `Bearer ${AGNES_API_KEY}` }
+        const response = await axios.get(`https://api.magichour.ai/v1/video-projects/${taskId}`, {
+            headers: { 'Authorization': `Bearer ${MAGIC_HOUR_API_KEY}` }
         });
+
         const videoData = response.data;
 
-        if (videoData.status === 'completed') {
-            res.json({ success: true, status: "completed", videoUrl: videoData.url });
+        if (videoData.status === 'complete') {
+            // Magic Hour 'downloads' array में वीडियो URL देता है
+            const videoUrl = videoData.downloads && videoData.downloads.length > 0 
+                             ? videoData.downloads[0].url 
+                             : null;
+            res.json({ success: true, status: "completed", videoUrl: videoUrl });
         } else {
             res.json({ success: true, status: "processing" });
         }
