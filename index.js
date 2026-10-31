@@ -52,14 +52,7 @@ app.post('/api/generate-video', async (req, res) => {
     }
 });
 
-        // Magic Hour एक project_id देता है
-        res.json({ success: true, taskId: response.data.id });
-
-    } catch (error) {
-        console.error("Magic Hour Error:", error.response ? error.response.data : error.message);
-        res.status(500).json({ success: false, error: "Video task fail." });
-    }
-});
+        
 
 // 3. Video Status Check (Magic Hour)
 app.get('/api/video-status/:taskId', async (req, res) => {
