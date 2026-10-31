@@ -24,17 +24,16 @@ app.post('/api/generate-story', async (req, res) => {
     }
 });
 
-// 2. Video Generate (Magic Hour - wan-2.2 model)
+// 2. Video Generate (Magic Hour) - Fixed Prompt inside style
 app.post('/api/generate-video', async (req, res) => {
     const { prompt } = req.body;
 
     try {
         const response = await axios.post('https://api.magichour.ai/v1/text-to-video', {
             model: "wan-2.2",
-            prompt: prompt,
-            end_seconds: 5,      // यहाँ duration_seconds की जगह end_seconds कर दिया है
-            style: {             // यहाँ style ऑब्जेक्ट जोड़ दिया है
-                name: "Cinematic" 
+            end_seconds: 5,
+            style: {
+                prompt: prompt // 👈 प्रॉम्प्ट यहाँ style के अंदर डाला है
             }
         }, {
             headers: {
@@ -43,7 +42,6 @@ app.post('/api/generate-video', async (req, res) => {
             }
         });
 
-        // Magic Hour एक project_id देता है
         res.json({ success: true, taskId: response.data.id });
 
     } catch (error) {
@@ -51,8 +49,6 @@ app.post('/api/generate-video', async (req, res) => {
         res.status(500).json({ success: false, error: "Video task fail." });
     }
 });
-
-        
 
 // 3. Video Status Check (Magic Hour)
 app.get('/api/video-status/:taskId', async (req, res) => {
@@ -66,7 +62,6 @@ app.get('/api/video-status/:taskId', async (req, res) => {
         const videoData = response.data;
 
         if (videoData.status === 'complete') {
-            // Magic Hour 'downloads' array में वीडियो URL देता है
             const videoUrl = videoData.downloads && videoData.downloads.length > 0 
                              ? videoData.downloads[0].url 
                              : null;
