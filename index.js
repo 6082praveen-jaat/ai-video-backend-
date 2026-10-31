@@ -31,7 +31,7 @@ app.post('/api/generate-video', async (req, res) => {
     try {
         const response = await axios.post('https://api.magichour.ai/v1/text-to-video', {
             model: "wan-2.2",
-            end_seconds: 5,
+            end_seconds: 1,
             resolution: "480p", 
             aspect_ratio: "16:9",
             style: {
