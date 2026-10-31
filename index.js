@@ -32,15 +32,25 @@ app.post('/api/generate-video', async (req, res) => {
         const response = await axios.post('https://api.magichour.ai/v1/text-to-video', {
             model: "wan-2.2",
             prompt: prompt,
-            duration_seconds: 5,
-            resolution: "480p",
-            aspect_ratio: "16:9"
+            end_seconds: 5,      // यहाँ duration_seconds की जगह end_seconds कर दिया है
+            style: {             // यहाँ style ऑब्जेक्ट जोड़ दिया है
+                name: "Cinematic" 
+            }
         }, {
             headers: {
                 'Authorization': `Bearer ${MAGIC_HOUR_API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
+
+        // Magic Hour एक project_id देता है
+        res.json({ success: true, taskId: response.data.id });
+
+    } catch (error) {
+        console.error("Magic Hour Error:", error.response ? error.response.data : error.message);
+        res.status(500).json({ success: false, error: "Video task fail." });
+    }
+});
 
         // Magic Hour एक project_id देता है
         res.json({ success: true, taskId: response.data.id });
