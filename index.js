@@ -91,7 +91,53 @@ app.post('/api/generate-voice', async (req, res) => {
         res.status(500).json({ success: false, error: "Voice failed." });
     }
 });
+// 5. Razorpay Payment Verification (Webhook)
+app.post('/api/verify-payment', async (req, res) => {
+    try {
+        // Razorpay webhook se aane wala data
+        const paymentEntity = req.body.payload?.payment?.entity;
+        
+        if (!paymentEntity) {
+            return res.status(400).send("Invalid payload");
+        }
 
+        const email = paymentEntity.email;
+        const status = paymentEntity.status;
+
+        // Agar payment successful (captured) hai
+        if (status === 'captured') {
+            const supabaseUrl = process.env.SUPABASE_URL;
+            const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Admin key
+
+            // 1. User ko email se find karein
+            const userRes = await axios.get(`${supabaseUrl}/rest/v1/profile?email=eq.${email}&select=id,credits`, {
+                headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+            });
+
+            if (userRes.data.length > 0) {
+                const user = userRes.data[0];
+                const newCredits = user.credits + 500; // 500 credits add karein
+
+                // 2. Credits update karein
+                await axios.patch(`${supabaseUrl}/rest/v1/profile?id=eq.${user.id}`, {
+                    credits: newCredits
+                }, {
+                    headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' }
+                });
+                
+                console.log(`✅ Credits added for ${email}`);
+                return res.status(200).send("Credits updated");
+            } else {
+                console.log(`❌ User ${email} not found in DB`);
+                return res.status(404).send("User not found");
+            }
+        }
+        res.status(200).send("Payment not captured yet");
+    } catch (error) {
+        console.error("Payment verification error:", error.message);
+        res.status(500).send("Error verifying payment");
+    }
+});
 app.get('/', (req, res) => { res.send("Backend is running!"); });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
